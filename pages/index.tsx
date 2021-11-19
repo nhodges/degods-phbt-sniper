@@ -31,7 +31,7 @@ const Home = ({ phbtDeGods }: any) => {
           {phbtDeGods && phbtDeGods.map((phbtDeGod: any) => {
             return (
 
-              <a href={`https://alpha.art/t/${phbtDeGod.mintId}`} className={styles.card}>
+              <a key={phbtDeGod.mintId} href={`https://alpha.art/t/${phbtDeGod.mintId}`} className={styles.card}>
                 <h2>{phbtDeGod.title}</h2>
                 <img src={phbtDeGod.image} />
               </a>
