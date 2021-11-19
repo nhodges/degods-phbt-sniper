@@ -1,12 +1,60 @@
 import type { NextPage } from 'next'
 import Head from 'next/head'
-import Image from 'next/image'
 import styles from '../styles/Home.module.css'
+import { useEffect, useState } from "react";
 
-const Home = ({ phbtDeGods }: any) => {
-  console.log(phbtDeGods)
+const Home: NextPage = () => {
 
-  
+  const [isLoading, setIsLoading] = useState(true)
+  const [phbtDeGods, setPhbtDeGods] = useState([])
+
+  useEffect(() => {
+    async function fetchDeGods() {
+      let phbtDeGods: any = []
+      const firstPageResponse = await fetch('https://apis.alpha.art/api/v1/collection', {
+        method: 'POST',
+        headers: {},
+        mode: 'cors',
+        cache: 'default',
+        body: JSON.stringify({
+          collectionId: "degods",
+          orderBy: "PRICE_LOW_TO_HIGH",
+          status: ["BUY_NOW"]
+        })
+      })
+      const firstPageResponseParsed = await firstPageResponse.json()
+      phbtDeGods = phbtDeGods.concat(firstPageResponseParsed.tokens.filter((token: any) => {
+        return parseInt(token.last, 10) > parseInt(token.price, 10)
+      }))
+      if (firstPageResponseParsed.nextPage !== '') {
+        let getPages = true
+        let nextPageToken = firstPageResponseParsed.nextPage
+        while (getPages === true) {
+          let nextPageResponse = await fetch('https://apis.alpha.art/api/v1/collection', {
+            method: 'POST',
+            headers: {},
+            mode: 'cors',
+            cache: 'default',
+            body: JSON.stringify({
+              token: nextPageToken
+            })
+          })
+          let nextPageResponseParsed = await nextPageResponse.json()
+          phbtDeGods = phbtDeGods.concat(nextPageResponseParsed.tokens.filter((token: any) => {
+            return parseInt(token.last, 10) > parseInt(token.price, 10)
+          }))
+          if (!nextPageResponseParsed.nextPage) {
+            getPages = false
+          } else {
+            nextPageToken = nextPageResponseParsed.nextPage
+          }
+        }
+      }
+      setPhbtDeGods(phbtDeGods)
+      setIsLoading(false)
+    }
+    fetchDeGods()
+  }, [])
 
   return (
     <div className={styles.container}>
@@ -27,8 +75,10 @@ const Home = ({ phbtDeGods }: any) => {
         </p>
 
         <div className={styles.grid}>
-
-          {phbtDeGods && phbtDeGods.map((phbtDeGod: any) => {
+          {isLoading && (
+            <h2>Locating all paper handed bitches ...</h2>
+          )}
+          {!isLoading && phbtDeGods && phbtDeGods.map((phbtDeGod: any) => {
             return (
 
               <a key={phbtDeGod.mintId} href={`https://alpha.art/t/${phbtDeGod.mintId}`} className={styles.card}>
@@ -51,53 +101,6 @@ const Home = ({ phbtDeGods }: any) => {
       </footer>
     </div>
   )
-}
-
-export async function getStaticProps(context: any) {
-  console.log(context)
-  let phbtDeGods: any = []
-  const firstPageResponse = await fetch('https://apis.alpha.art/api/v1/collection', {
-    method: 'POST',
-    headers: {},
-    mode: 'cors',
-    cache: 'default',
-    body: JSON.stringify({
-      collectionId: "degods",
-      orderBy: "PRICE_LOW_TO_HIGH",
-      status: ["BUY_NOW"]
-    })
-  })
-  const firstPageResponseParsed = await firstPageResponse.json()
-  phbtDeGods = phbtDeGods.concat(firstPageResponseParsed.tokens.filter((token: any) => {
-    return parseInt(token.last, 10) > parseInt(token.price, 10)
-  }))
-  if (firstPageResponseParsed.nextPage !== '') {
-    let getPages = true
-    let nextPageToken = firstPageResponseParsed.nextPage
-    while(getPages === true) {
-      let nextPageResponse = await fetch('https://apis.alpha.art/api/v1/collection', {
-        method: 'POST',
-        headers: {},
-        mode: 'cors',
-        cache: 'default',
-        body: JSON.stringify({
-          token: nextPageToken
-        })
-      })
-      let nextPageResponseParsed = await nextPageResponse.json()
-      phbtDeGods = phbtDeGods.concat(nextPageResponseParsed.tokens.filter((token: any) => {
-        return parseInt(token.last, 10) > parseInt(token.price, 10)
-      }))
-      if (!nextPageResponseParsed.nextPage) {
-        getPages = false
-      } else {
-        nextPageToken = nextPageResponseParsed.nextPage
-      }
-    }
-  }
-  return {
-    props: { phbtDeGods }, // will be passed to the page component as props
-  }
 }
 
 export default Home
