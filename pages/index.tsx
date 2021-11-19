@@ -82,6 +82,7 @@ const Home: NextPage = () => {
             return (
 
               <a key={phbtDeGod.mintId} href={`https://alpha.art/t/${phbtDeGod.mintId}`} className={styles.card}>
+                <span style={{ float: 'right' }}>◎ {(parseInt(phbtDeGod.price, 10) / 1000000000)}</span>
                 <h2>{phbtDeGod.title}</h2>
                 <img src={phbtDeGod.image} />
               </a>
